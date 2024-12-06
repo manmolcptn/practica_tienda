@@ -18,7 +18,15 @@
         error_reporting( E_ALL );
         ini_set( "display_errors", 1 );
  
-        require('../conexion.php');
+        require('../util/conexion.php');
+
+        //Para recuperar la sesion de otro fichero
+        session_start();
+        //Si no hay una sesion creada del usuario lo mando a iniciar sesión
+        if(!isset($_SESSION["usuario"])) {
+            header("location: ../usuario/iniciar_sesion.php");
+            exit;
+        }
     ?>
 </head>
 <body>
@@ -28,26 +36,35 @@
                 $tmp_nombre = $_POST["nombre"];
                 $tmp_descripcion = $_POST["descripcion"];
 
-                if ($tmp_nombre == "") $err_nombre = "El nombre es obligatorio.";
-                else {
-                    if (strlen($tmp_nombre) > 30) $err_nombre = "El nombre no puede tener más de 30 caractéres.";
-                    else $nombre = $tmp_nombre;
-                }
-
-                if($tmp_descripcion == "") $err_descripcion = "La descripción es obligatoria.";
+                $sql = "SELECT * FROM categorias WHERE nombre = '$tmp_nombre'";
+                $resultado = $_conexion -> query($sql);
+            
+                if ($resultado -> num_rows == 1) $err_categoria = "La categoria ya existe.";
                 else{
-                    if(strlen($tmp_descripcion) > 255) $err_descripcion = "Se permiten 255 caractéres como máximo.";
+                    
+                    if (strlen($tmp_nombre) < 2 || strlen($tmp_nombre) > 30) $err_nombre = "El nombre debe ser entre 2 y 30 caracteres.";
                     else{
-                        $patron = "/^[a-zA-Z0-9ÁÉÍÓÚÑáéíóúñ ]+$/";
-                        if(!preg_match($patron, $tmp_descripcion)) $err_descripcion = "Sólo se permiten letras, números y espacios en blanco.";
-                        else $descripcion = $tmp_descripcion;
+                        $patron = "/^[a-zA-ZÁÉÍÓÚÑáéíóúñ ]+$/";
+                        if(!preg_match($patron, $tmp_nombre)) $err_nombre = "Sólo se permiten letras y espacios en blanco.";
+                        else $nombre = $tmp_nombre;
+                    }
+
+                    if(strlen($tmp_descripcion) == 0) $err_descripcion = "La descripción es obligatoria.";
+                    else{
+                        if(strlen($tmp_descripcion) > 255) $err_descripcion = "Se permiten 255 caractéres como máximo.";
+                        else{
+                            $patron = "/^[a-zA-Z0-9ÁÉÍÓÚÑáéíóúñ ]+$/";
+                            if(!preg_match($patron, $tmp_descripcion)) $err_descripcion = "Sólo se permiten letras, números y espacios en blanco.";
+                            else $descripcion = $tmp_descripcion;
+                        }
+                    }
+                
+                    if(isset($nombre) && isset($descripcion)){
+                        $sql = "INSERT INTO categorias (nombre, descripcion) VALUES ('$nombre', '$descripcion')";
+                        $_conexion -> query($sql);
+                        echo "<div class='container alert alert-success mt-3'>La categoría $nombre ha sido insertada correctamente!!</div>";
                     }
                 }
-                
-                $sql = "INSERT INTO categorias (nombre, descripcion)
-                    VALUES ('$nombre', '$descripcion')";
-                $_conexion -> query($sql);
-                
             }
         ?>
         <h1>Nueva Categoría</h1>
@@ -55,11 +72,13 @@
             <div class="mb-3">
                 <label class="form-label">Nombre</label>
                 <input name="nombre" class="form-control" type="text">
-                <?php if(isset($err_nombre)) echo "<span class='error'>$err_nombre</span>"?>
+                <?php if(isset($err_nombre)) echo "<div class='container alert alert-danger mt-3'>$err_nombre</div>";?>
             </div>
             <div class="mb-3">
                 <label class="form-label">Descripcion</label>
                 <textarea name="descripcion" class="form-control"></textarea>
+                <?php if(isset($err_descripcion)) echo "<div class='container alert alert-danger mt-3'>$err_descripcion</div>";?>
+                <?php if(isset($err_categoria)) echo "<div class='container alert alert-danger mt-3'>$err_categoria</div>";?>
             </div>
             <div class="mb-3">
                 <input type="submit" class="btn btn-primary" value="Añadir">

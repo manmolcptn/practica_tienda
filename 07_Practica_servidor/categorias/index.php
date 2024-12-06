@@ -13,11 +13,19 @@
         error_reporting( E_ALL );
         ini_set( "display_errors", 1 );
 
-        require('../conexion.php');
+        require('../util/conexion.php');
+        //Para recuperar la sesion de otro fichero
+        session_start();
+        //Si no hay una sesion creada del usuario lo mando a iniciar sesión
+        if(!isset($_SESSION["usuario"])) {
+            header("location: ../usuario/iniciar_sesion.php");
+            exit;
+        }
     ?>
 </head>
 <body>
 <div class="container">
+    
         <h1>Listado de categorías</h1>
         <?php 
 
@@ -33,6 +41,7 @@
         ?>
         <a class="btn btn-secondary mb-3" href="nueva_categoria.php">Nueva categoria</a>
         <a class="btn btn-secondary mb-3" href="../productos/index.php">Productos</a>
+        <a class="btn btn-dark mb-3 float-end" href="../index.php">Tienda</a>
         <table class="table table-dark table-hover">
             <thead>
                 <tr>

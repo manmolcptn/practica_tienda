@@ -13,21 +13,22 @@
         error_reporting( E_ALL );
         ini_set( "display_errors", 1 );
 
-        require('../util/conexion.php');
-        //Para recuperar la sesion de otro fichero
+        require('./util/conexion.php');
         session_start();
-        //Si no hay una sesion creada del usuario lo mando a iniciar sesión
-        if(!isset($_SESSION["usuario"])) {
-            header("location: ../usuario/iniciar_sesion.php");
-            exit;
-        }
     ?>
 </head>
 <body>
 <div class="container">
-        <h1>Listado de productos</h1>
         <?php 
-
+            if(isset($_SESSION["usuario"])) {
+                $usuario = $_SESSION["usuario"];
+                echo "<h4 class='alert alert-success mt-3'> Bienvenid@ $usuario!</h4>";
+            }
+        ?>
+        <h1>Listado de productos</h1>
+        
+        <?php 
+            
             if($_SERVER["REQUEST_METHOD"] == "POST") {
                 $id_producto = $_POST["id_producto"];
                 //echo "<h1>$id_producto</h1>";
@@ -38,9 +39,15 @@
             $sql = "SELECT * FROM productos";
             $resultado = $_conexion -> query($sql);
         ?>
-        <a class="btn btn-secondary mb-3" href="nuevo_producto.php">Nuevo producto</a>
-        <a class="btn btn-secondary mb-3" href="../categorias/index.php">Categorías</a>
-        <a class="btn btn-dark mb-3 float-end" href="../index.php">Tienda</a>
+        <?php 
+            if (isset($_SESSION["usuario"])){
+                echo " <a class='btn btn-danger mb-3 float-end' href='./usuario/cerrar_sesion.php'>Cerrar sesión</a>";
+                echo " <a class='btn btn-dark mb-3 me-1 float-end' href='./usuario/cambiar_credenciales.php?usuario=$usuario'>Modificar contraseña</a>";
+                echo " <a class='btn btn-secondary mb-3' href='./productos/index.php'>Productos</a>";
+                echo " <a class='btn btn-secondary mb-3' href='./categorias/index.php'>Categorías</a>";
+            } 
+            else echo "<a class='btn btn-secondary mb-3' href='./usuario/iniciar_sesion.php'>Iniciar Sesión</a>";
+        ?>
         <table class="table table-dark table-hover">
             <thead>
                 <tr>
@@ -50,8 +57,6 @@
                     <th>Stock</th>
                     <th>Descripción</th>
                     <th>Imagen</th>
-                    <th></th>
-                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -60,22 +65,11 @@
                     while($fila = $resultado -> fetch_assoc()){
                         echo "<tr>";
                         echo "<td>" . $fila["nombre"] . "</td>";
-                        echo "<td>" . $fila["precio"] . " €</td>";
+                        echo "<td>" . $fila["precio"] . "</td>";
                         echo "<td>" . $fila["categoria"] . "</td>";
                         echo "<td>" . $fila["stock"] . "</td>";
                         echo "<td style='min-width:150px'>" . $fila["descripcion"] . "</td>";
-                        echo "<td><img src=./" . $fila["imagen"]." width=150px></td>";
-                        ?>
-                        <td>
-                            <a class="btn btn-primary" 
-                               href="editar_producto.php?id_producto=<?php echo $fila["id_producto"] ?>">Editar</a>
-                        </td>
-                        <td>
-                            <form action="" method="post">
-                                <input type="hidden" name="id_producto" value="<?php echo $fila["id_producto"] ?>">
-                                <input class="btn btn-danger" type="submit" value="Borrar">
-                            </form>
-                        </td> <?php
+                        echo "<td><img src=./imagen/" . $fila["imagen"]." width=150px></td>";
                         echo "</tr>";
                     }
                 ?>

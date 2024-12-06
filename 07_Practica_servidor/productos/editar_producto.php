@@ -9,7 +9,15 @@
         error_reporting( E_ALL );
         ini_set( "display_errors", 1 ); 
         
-        require('../conexion.php');
+        require('../util/conexion.php');
+
+        //Para recuperar la sesion de otro fichero
+        session_start();
+        //Si no hay una sesion creada del usuario lo mando a iniciar sesión
+        if(!isset($_SESSION["usuario"])) {
+            header("location: ../usuario/iniciar_sesion.php");
+            exit;
+        }
     ?>
 </head>
 <body>
@@ -22,11 +30,9 @@
             //Introduce las categorias en un nuevo array
             while($fila = $resultado -> fetch_assoc()){
                 array_push($categorias, $fila["nombre"]);
-
             }
 
-            if($_SERVER["REQUEST_METHOD"] == "POST") {
-                $id_producto = $_POST["id_producto"];
+            if ($_SERVER["REQUEST_METHOD"] == "POST"){
                 $tmp_nombre = $_POST["nombre"];
                 $tmp_precio = $_POST["precio"];
                 $tmp_categoria = $_POST["categoria"];
@@ -36,15 +42,19 @@
 
                 if ($tmp_nombre == "") $err_nombre = "El nombre es obligatorio.";
                 else {
-                    if (strlen($tmp_nombre) > 50) $err_nombre = "El nombre no puede tener más de 50 caractéres.";
-                    else $nombre = $tmp_nombre;
+                    if (strlen($tmp_nombre) < 2 || strlen($tmp_nombre) > 50) $err_nombre = "El nombre debe contener entre 2 y 50 caracteres.";
+                    else{
+                        $patron = "/^[a-zA-Z0-9ñÑ ]+$/";
+                        if(!preg_match($patron, $tmp_nombre)) $err_nombre = "El nombre solo puede contener letras, numeros y espacios en blanco.";
+                        else $nombre = $tmp_nombre;
+                    }
                 }
 
                 if ($tmp_precio == "") $err_precio = "El precio es obligatorio.";
                 else {
                     if (floatval($tmp_precio) > 9999.99 || floatval($tmp_precio) < 0) $err_precio = "El precio debe ser positivo o menor que 9999.99€";
                     else{
-                        $patron = "/^[0-9.]+$/";
+                        $patron = "/^[0-9]{1,4}(\.[0-9]{1,2})?/";
                         if (!preg_match($patron, $tmp_precio)) $err_precio = "Solo puedes introducir números enteros o decimales con el punto.";
                         else $precio = $tmp_precio;
                     }
@@ -58,41 +68,40 @@
 
                 if ($tmp_stock == "") $stock = "0";
                 else {
-                    $patron = "/^[0-9]+$/";
-                    if (!preg_match($patron, $tmp_stock)) $err_stock = "Sólo se permiten 3 valores numéricos.";
-                    else $stock = $tmp_stock;
+                    if (strlen($tmp_stock) > 999 || intval($tmp_stock) < 0) $err_stock = "El stock debe ser positivo o menor de 999.";
+                    else{
+                        $patron = "/^[0-9]+$/";
+                        if (!preg_match($patron, $tmp_stock)) $err_stock = "Sólo se permiten 3 valores numéricos.";
+                        else $stock = $tmp_stock;
+                    }
                 }
 
-                if(strlen($tmp_descripcion) > 255) $err_descripcion = "Se permiten 255 caractéres como máximo.";
+                if(strlen($tmp_descripcion) == 0) $descripcion = "No hay descripción para este producto.";
                 else{
-                    $patron = "/^[a-zA-Z0-9ÁÉÍÓÚÑáéíóúñ ]+$/";
-                    if(!preg_match($patron, $tmp_descripcion)) $err_descripcion = "Sólo se permiten letras, números y espacios en blanco.";
-                    else $descripcion = $tmp_descripcion;
+                    if(strlen($tmp_descripcion) > 255) $err_descripcion = "Se permiten 255 caractéres como máximo.";
+                    else{
+                        $patron = "/^[a-zA-Z0-9ÁÉÍÓÚÑáéíóúñ ]+$/";
+                        if(!preg_match($patron, $tmp_descripcion)) $err_descripcion = "Sólo se permiten letras, números y espacios en blanco.";
+                        else $descripcion = $tmp_descripcion;
+                    }
                 }
 
-                if(isset($nombre) && isset($precio) && isset($categoria)){
-                    $direccion_temporal = $_FILES["imagen"]["tmp_name"];
-                    $tmp_nombre_imagen = $_FILES["imagen"]["name"];
-                    if (strlen($tmp_nombre_imagen) > 60) $err_nombre_imagen = "Nombre de la imagen demasiado largo.";
-                    else $nombre_imagen = $tmp_nombre_imagen;
-                    move_uploaded_file($direccion_temporal, "imagenes/$nombre_imagen");
+                
+                if(isset($nombre) && isset($precio) && isset($categoria) && !isset($err_stock) && !isset($err_descripcion)){
+                    $id_producto = $_GET["id_producto"];
                     $sql = "UPDATE productos SET
                             nombre = '$nombre',
                             precio = $precio,
                             categoria = '$categoria',
                             stock = $stock, 
-                            imagen = '../imagenes/$nombre_imagen',
                             descripcion = '$descripcion'
                         WHERE id_producto = $id_producto";
-
                     $_conexion -> query($sql);
+                    echo "<div class='container alert alert-success mt-3'>El producto $nombre ha sido moficado correctamente!!</div>";
                 }
-                
             }
-
-            echo "<h1>Producto " .$_GET["id_producto"] . "</h1>";
-
             $id_producto = $_GET["id_producto"];
+            echo "<h3>Producto $id_producto</h3>";
             $sql = "SELECT * FROM productos WHERE id_producto = '$id_producto'";
             $resultado = $_conexion -> query($sql);
             $producto = $resultado -> fetch_assoc();
@@ -102,11 +111,13 @@
                 <label class="form-label">Nombre</label>
                 <input class="form-control" name="nombre" type="text" 
                     value="<?php echo $producto["nombre"] ?>">
+                <?php if(isset($err_nombre)) echo "<div class='container alert alert-danger mt-3'>$err_nombre</div>"?>
             </div>
             <div class="mb-3">
                 <label class="form-label">Precio</label>
                 <input class="form-control" name="precio" type="text" 
                     value="<?php echo $producto["precio"] ?>">
+                <?php if(isset($err_precio)) echo "<div class='container alert alert-danger mt-3'>$err_precio</div>"?>
             </div>
             <div class="mb-3">
                 <label class="form-label">Categoría</label>
@@ -120,20 +131,19 @@
                         </option>
                     <?php } ?>
                 </select>
+                <?php if(isset($err_categoria)) echo "<div class='container alert alert-danger mt-3'>$err_categoria</div>"?>
             </div>
             <div class="mb-3">
                 <label class="form-label">Stock</label>
                 <input class="form-control" name="stock" type="text"
                     value="<?php echo $producto["stock"] ?>">
+                    <?php if(isset($err_stock)) echo "<div class='container alert alert-danger mt-3'>$err_stock</div>"?>
             </div>
             <div class="mb-3">
                 <label class="form-label">Descripcion</label>
                 <input class="form-control" name="descripcion" type="text"
                     value="<?php echo $producto["descripcion"] ?>">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Imagen</label>
-                <input class="form-control" name="imagen" type="file">
+                    <?php if(isset($err_descripcion)) echo "<div class='container alert alert-danger mt-3'>$err_descripcion</div>"?>
             </div>
             <div class="mb-3">
                 <input type="hidden" name="id_producto" value="<?php echo $producto["id_producto"] ?>">

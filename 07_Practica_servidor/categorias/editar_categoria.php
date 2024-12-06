@@ -9,7 +9,15 @@
         error_reporting( E_ALL );
         ini_set( "display_errors", 1 ); 
         
-        require('../conexion.php');
+        require('../util/conexion.php');
+
+        //Para recuperar la sesion de otro fichero
+        session_start();
+        //Si no hay una sesion creada del usuario lo mando a iniciar sesión
+        if(!isset($_SESSION["usuario"])) {
+            header("location: ../usuario/iniciar_sesion.php");
+            exit;
+        }
     ?>
 </head>
 <body>
@@ -42,13 +50,12 @@
                 if(isset($descripcion)){
                     $sql = "UPDATE categorias SET descripcion = '$descripcion' WHERE nomber = $nombre";
                     $_conexion -> query($sql);
+                    echo "<div class='container alert alert-success mt-3'>La categoría $nombre ha sido moficada correctamente!!</div>";
                 }
                 
             }
-
-            echo "<h1>Categoría " .$_GET["nombre"] . "</h1>";
-
             $nombre = $_GET["nombre"];
+            echo "<h3>Categoría $nombre</h3>";
             $sql = "SELECT * FROM categorias WHERE nombre = '$nombre'";
             $resultado = $_conexion -> query($sql);
             $categoria = $resultado -> fetch_assoc();
@@ -56,7 +63,7 @@
         <form action="" method="post" enctype="multipart/form-data">
             <div class="mb-3">
                 <label class="form-label">Nombre</label>
-                <input class="form-control" readonly name="nombre" type="text" 
+                <input class="form-control" disabled name="nombre" type="text" 
                     value="<?php echo $categoria["nombre"] ?>">
             </div>
             <div class="mb-3">
