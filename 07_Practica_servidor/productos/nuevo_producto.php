@@ -103,11 +103,12 @@
                     $nombre_imagen = $tmp_nombre_imagen;
                     move_uploaded_file($direccion_temporal, "../imagenes/$nombre_imagen");
                 } 
-                
+                $imagen = "../imagenes/" . $nombre_imagen;
+
                 if(isset($nombre) && isset($precio) && isset($categoria) && !isset($err_stock) && !isset($err_descripcion) && !isset($err_imagen)){
                     $sql = $_conexion -> prepare("INSERT INTO productos (nombre, precio, categoria, stock, imagen, descripcion)
                         VALUES (?, ?, ?, ?, ?, ?)");
-                    $sql = $_conexion -> bind_param("sdsiss", $nombre, $precio, $categoria, $stock, "../imagenes/"+$nombre_imagen, $descripcion);
+                    $sql -> bind_param("sdsiss", $nombre, $precio, $categoria, $stock, $imagen, $descripcion);
                     $sql -> execute();
                     echo "<div class='container alert alert-success mt-3'>El producto $nombre ha sido insertado correctamente!!</div>";
                 }

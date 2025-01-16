@@ -37,7 +37,7 @@
                 $tmp_descripcion = $_POST["descripcion"];
 
                 $sql = $_conexion -> prepare("SELECT * FROM categorias WHERE nombre = ?");
-                $_sql = $_conexion -> bind_param("s", $tmp_nombre);
+                $_sql -> bind_param("s", $tmp_nombre);
                 $sql -> execute();
                 $resultado = $sql -> get_result();
             
@@ -63,7 +63,7 @@
                 
                     if(isset($nombre) && isset($descripcion)){
                         $sql = $_conexion -> prepare("INSERT INTO categorias (nombre, descripcion) VALUES (?, ?)");
-                        $sql = $_conexion -> bind_param("ss", $nombre, $categoria);
+                        $sql -> bind_param("ss", $nombre, $categoria);
                         $sql -> execute();
                         echo "<div class='container alert alert-success mt-3'>La categoría $nombre ha sido insertada correctamente!!</div>";
                     }

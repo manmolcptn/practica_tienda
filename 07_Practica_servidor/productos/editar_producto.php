@@ -96,7 +96,7 @@
                             stock = ?, 
                             descripcion = ?
                         WHERE id_producto = ?");
-                    $sql = $_conexion -> bind_param("sdsis");
+                    $sql -> bind_param("sdsis");
                     $sql -> execute();
                     echo "<div class='container alert alert-success mt-3'>El producto $nombre ha sido moficado correctamente!!</div>";
                 }
@@ -104,7 +104,7 @@
             $id_producto = $_GET["id_producto"];
             echo "<h3>Producto $id_producto</h3>";
             $sql = $_conexion -> prepare("SELECT * FROM productos WHERE id_producto = ?");
-            $sql = $_conexion -> bind_param("i", $id_producto);
+            $sql -> bind_param("i", $id_producto);
             $sql -> execute();
             $resultado = $sql -> get_result();
             $producto = $resultado -> fetch_assoc();

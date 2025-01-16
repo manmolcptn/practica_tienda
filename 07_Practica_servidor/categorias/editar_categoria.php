@@ -49,7 +49,7 @@
 
                 if(isset($descripcion)){
                     $sql = $_conexion -> prepare("UPDATE categorias SET descripcion = ? WHERE nombre = ?");
-                    $sql = $_conexion -> bind_param("ss", $descripcion, $nombre);
+                    $sql -> bind_param("ss", $descripcion, $nombre);
                     $sql -> execute();
                     echo "<div class='container alert alert-success mt-3'>La categoría $nombre ha sido moficada correctamente!!</div>";
                 }
@@ -58,7 +58,7 @@
             $nombre = $_GET["nombre"];
             echo "<h3>Categoría $nombre</h3>";
             $sql = $_conexion -> prepare("SELECT * FROM categorias WHERE nombre = ?");
-            $sql = $_conexion -> bind_param("s", $nombre);
+            $sql -> bind_param("s", $nombre);
             $sql -> execute();
             $resultado = $sql -> get_result();
             $categoria = $resultado -> fetch_assoc();
