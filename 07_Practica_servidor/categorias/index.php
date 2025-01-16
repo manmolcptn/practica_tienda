@@ -32,7 +32,9 @@
             if($_SERVER["REQUEST_METHOD"] == "POST") {
                 $nombre = $_POST["nombre"];
                 //echo "<h1>$id_producto</h1>";
-                $sql = "DELETE FROM categorias WHERE nombre = '$nombre'";
+                $sql = $_conexion -> prepare("DELETE FROM categorias WHERE nombre = ?");
+                $sql = $_conexion -> bind_param("s", $nombre);
+                $sql -> execute();
                 $_conexion -> query($sql);
             }
 

@@ -89,21 +89,24 @@
                 
                 if(isset($nombre) && isset($precio) && isset($categoria) && !isset($err_stock) && !isset($err_descripcion)){
                     $id_producto = $_GET["id_producto"];
-                    $sql = "UPDATE productos SET
-                            nombre = '$nombre',
-                            precio = $precio,
-                            categoria = '$categoria',
-                            stock = $stock, 
-                            descripcion = '$descripcion'
-                        WHERE id_producto = $id_producto";
-                    $_conexion -> query($sql);
+                    $sql = $_conexion -> prepare("UPDATE productos SET
+                            nombre = ?,
+                            precio = ?,
+                            categoria = ?,
+                            stock = ?, 
+                            descripcion = ?
+                        WHERE id_producto = ?");
+                    $sql = $_conexion -> bind_param("sdsis");
+                    $sql -> execute();
                     echo "<div class='container alert alert-success mt-3'>El producto $nombre ha sido moficado correctamente!!</div>";
                 }
             }
             $id_producto = $_GET["id_producto"];
             echo "<h3>Producto $id_producto</h3>";
-            $sql = "SELECT * FROM productos WHERE id_producto = '$id_producto'";
-            $resultado = $_conexion -> query($sql);
+            $sql = $_conexion -> prepare("SELECT * FROM productos WHERE id_producto = ?");
+            $sql = $_conexion -> bind_param("i", $id_producto);
+            $sql -> execute();
+            $resultado = $sql -> get_result();
             $producto = $resultado -> fetch_assoc();
         ?>
         <form action="" method="post" enctype="multipart/form-data">

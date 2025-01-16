@@ -105,10 +105,10 @@
                 } 
                 
                 if(isset($nombre) && isset($precio) && isset($categoria) && !isset($err_stock) && !isset($err_descripcion) && !isset($err_imagen)){
-                    $sql = "INSERT INTO productos (nombre, precio, categoria, stock, imagen, descripcion)
-                        VALUES 
-                        ('$nombre', '$precio', '$categoria', '$stock', '../imagenes/$nombre_imagen', '$descripcion')";
-                    $_conexion -> query($sql);
+                    $sql = $_conexion -> prepare("INSERT INTO productos (nombre, precio, categoria, stock, imagen, descripcion)
+                        VALUES (?, ?, ?, ?, ?, ?)");
+                    $sql = $_conexion -> bind_param("sdsiss", $nombre, $precio, $categoria, $stock, "../imagenes/"+$nombre_imagen, $descripcion);
+                    $sql -> execute();
                     echo "<div class='container alert alert-success mt-3'>El producto $nombre ha sido insertado correctamente!!</div>";
                 }
             }

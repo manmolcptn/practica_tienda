@@ -36,8 +36,10 @@
                 $tmp_nombre = $_POST["nombre"];
                 $tmp_descripcion = $_POST["descripcion"];
 
-                $sql = "SELECT * FROM categorias WHERE nombre = '$tmp_nombre'";
-                $resultado = $_conexion -> query($sql);
+                $sql = $_conexion -> prepare("SELECT * FROM categorias WHERE nombre = ?");
+                $_sql = $_conexion -> bind_param("s", $tmp_nombre);
+                $sql -> execute();
+                $resultado = $sql -> get_result();
             
                 if ($resultado -> num_rows == 1) $err_categoria = "La categoria ya existe.";
                 else{
@@ -60,8 +62,9 @@
                     }
                 
                     if(isset($nombre) && isset($descripcion)){
-                        $sql = "INSERT INTO categorias (nombre, descripcion) VALUES ('$nombre', '$descripcion')";
-                        $_conexion -> query($sql);
+                        $sql = $_conexion -> prepare("INSERT INTO categorias (nombre, descripcion) VALUES (?, ?)");
+                        $sql = $_conexion -> bind_param("ss", $nombre, $categoria);
+                        $sql -> execute();
                         echo "<div class='container alert alert-success mt-3'>La categoría $nombre ha sido insertada correctamente!!</div>";
                     }
                 }
